@@ -90,7 +90,7 @@ transform: translate(-50%, -50%);
 z-index: 1000;
 border-radius: 5px;
 box-shadow:  10px 10px 15px #bebebe,
-             -10px -10px 15px #ffffff;
+             10px 10px 15px #bebebe;
 
 
 label {
