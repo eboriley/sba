@@ -3,6 +3,7 @@ import {useState, useEffect} from 'react'
 import db from '../firebase'
 import {Link} from 'react-router-dom'
 import AddStudent from './AddStudent'
+import { useDispatch, useSelector } from "react-redux";
 
 const Students = (props) => {
     const [students, setStudents] = useState();
@@ -10,7 +11,7 @@ const Students = (props) => {
 
     useEffect(() => {
         const studentsReq = db.collection('student');
-        studentsReq.onSnapshot((snapshot) => (
+        studentsReq.orderBy('st_name','asc').onSnapshot((snapshot) => (
             setStudents(snapshot.docs.map((doc) => ({id: doc.id, data: doc.data()})))
         ))
     }, [])
@@ -45,12 +46,20 @@ const Students = (props) => {
 }
 
 const Student = ({id, name, stClass, stPhoto, stDob}) => {
+  const deleteStudent = () => {
+    db.collection('student').doc(id).delete().then(() => {
+      console.log("Document successfully deleted!");
+    }).catch((error) => {
+      console.error("Error deleting student", error);
+    })
+  }
   return(
+    <>
       <ListGroup>    
         <Card>
         <ProfileImage img={stPhoto}/>
           <SubCard>
-          <Link className="studentItem" to={`viewStudent/${id}`}>{name}</Link>
+          <Link className="studentItem" to={`/editstudent/${id}`}>{name}</Link>
           <ProfileControls>
             <Control>
             <img src="../images/birthday-cake-svgrepo-com.svg" alt="birthday-logo"/>
@@ -62,17 +71,17 @@ const Student = ({id, name, stClass, stPhoto, stDob}) => {
             </Control>
             <Control>
             <img src="../images/eighty-svgrepo-com.svg" alt="80-logo"/>
-              <a href="">Add some scores</a>
+              <Link>Add scores</Link>
             </Control>
             <Control>
               <img src="../images/delete-ui-svgrepo-com.svg" alt="delete-logo"/>
-              <a href="">Delete</a>
+              <Link to={`/edit/${id}`} onClick={deleteStudent}>delete</Link>
             </Control>
           </ProfileControls>
           </SubCard>
         </Card>
-        
       </ListGroup>
+      </>
   )
 }
 
@@ -83,6 +92,7 @@ padding: 1rem 2rem;
 display: flex;
 flex-direction: column;
 align-items: center;
+height:100%;
 
 
 `;
@@ -90,7 +100,7 @@ const NamesContainer = styled.div`
 display: flex;
 flex-direction: column;
 overflow-y: scroll;
-height: 500px;
+height: 540px;
 background-color: #F0F3F8;
 margin-bottom: .8rem;
 
@@ -172,7 +182,6 @@ a{
   font-size:.8rem;
 
   &:hover{
-  font-size:1rem;
   color: #135ABC;
   transition: 300ms cubic-bezier(.17,.67,.83,.67);
 }

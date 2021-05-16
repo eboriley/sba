@@ -18,6 +18,7 @@ const AddStudent = ({open, props, onClose}) => {
     const [st_name, setSt_name] = useState("");
     const [st_dob, setSt_dob] = useState("");
     const [st_class, setSt_class] = useState("");
+    const [st_photo] = useState("https://moonvillageassociation.org/wp-content/uploads/2018/06/default-profile-picture1.jpg");
     const [st_status, setSt_status] = useState('active');
     const [timestamp] = useState(`${time.full}`);
 
@@ -28,12 +29,13 @@ const AddStudent = ({open, props, onClose}) => {
             st_name: st_name,
             st_dob: st_dob,
             st_class: st_class,
+            st_photo: st_photo,
             st_status: st_status,
             timestamp:timestamp
         })
         .then((docRef) => {
             console.log("Document written with ID: ", docRef.id);
-        }).then(()=> alert("student added")).then(onClose)
+        }).then(alert("student added")).then(onClose)
         .catch((error) => {
             console.error("Error adding document: ", error);
         });
@@ -88,7 +90,7 @@ top: 50%;
 left: 50%;
 transform: translate(-50%, -50%); 
 z-index: 1000;
-border-radius: 5px;
+border-radius: 15px;
 box-shadow:  10px 10px 15px #bebebe,
              10px 10px 15px #bebebe;
 
