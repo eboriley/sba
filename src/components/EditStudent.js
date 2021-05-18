@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import styled from 'styled-components';
 import db from '../firebase'
 import {useParams, useHistory} from 'react-router-dom'
-
+import {firebase} from '../firebase'
 
 const EditStudent = (props) => {
   const {id} = useParams();
   const history = useHistory();
+  const [image, setImage] = useState();
+  const [previewImg, setPreviewImg] = useState()
+  const [downloadURL, setDownloadURL] = useState();
   const current = new Date();
+  
   const time = {
       dd: current.getDay(),
       mm: current.getMonth(),
@@ -25,27 +29,98 @@ const EditStudent = (props) => {
   const [st_photo, setSt_photo] = useState("");
   const [st_status, setSt_status] = useState('active');
   const [timestamp] = useState(`${time.full}`);
+
+  let reader = new FileReader();
+  let files = []
+  const onImageChange = (event) => {
+    if(event.target.files[0]){
+      files = event.target.files;
+      reader = new FileReader();
+      reader.onload = () =>{
+        setPreviewImg(reader.result)
+      }
+      reader.readAsDataURL(files[0]);
+    }
+    setImage(event.target.files[0]) 
+        
+   }
   
+   const uploadImage = () => {
+    const storage = firebase.storage();
+    const storageRef = storage.ref();
+    const uploadTask = storageRef.child(`images/${image.name}`).put(image);
+    console.log(image)
+        // Listen for state changes, errors, and completion of the upload.
+    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+        (snapshot) => {
+        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+        switch (snapshot.state) {
+            case firebase.storage.TaskState.PAUSED: // or 'paused'
+                console.log('Upload is paused');
+                break;
+            case firebase.storage.TaskState.RUNNING: // or 'running'
+                console.log('Upload is running');
+                break;
+                default:
+        }
+            }, 
+            (error) => {
+                switch (error.code) {
+                    case 'storage/unauthorized':
+                      break;
+                    case 'storage/canceled':
+                      break;
+                    case 'storage/unknown':
+                      break;
+                    default:
+                }
+        }, 
+            () => {
+              // Upload completed successfully, now we can get the download URL
+              uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                setDownloadURL(downloadURL);
+                const db = firebase.firestore();
+                db.collection('student').doc(id).set({
+                  st_name: st_name,
+                  st_dob: st_dob,
+                  st_class: st_class,
+                  st_status: st_status,
+                  st_photo: downloadURL,
+                  timestamp:timestamp
+              })
+              .then((docRef) => {
+                  console.log("Document written with ID: ", docRef.id);
+              }).then(alert("student info updated")).then(history.push('/'))
+              .catch((error) => {
+                  console.error("Error adding document: ", error);
+              });
+              });
+            }
+    );
+            console.log(downloadURL);
+}
+
 
   const updateStudent = (e) => {
       e.preventDefault()
 
-      db.collection('student').doc(id).set({
+        db.collection('student').doc(id).set({
           st_name: st_name,
           st_dob: st_dob,
           st_class: st_class,
           st_status: st_status,
-          st_photo: st_photo,
+          st_photo: downloadURL,
           timestamp:timestamp
       })
       .then((docRef) => {
           console.log("Document written with ID: ", docRef.id);
-      }).then(alert("student info updated")).then(history.push('/'))
+      }).then(alert("Photo updated")).then(history.push('/'))
       .catch((error) => {
           console.error("Error adding document: ", error);
       });
 
-    
   }
 
   useEffect(() => {
@@ -69,7 +144,14 @@ const EditStudent = (props) => {
       
       <Container>
             <>
-        <ProfileImage img={st_photo}/>
+        
+        <ProfileImage img={!previewImg? st_photo : previewImg}/>
+          <InputField type="file" 
+          onChange={onImageChange}
+          className="filetype" 
+          id="group_image" 
+          accept="image/*"/>
+        <AddStudentButton onClick={uploadImage} >Update Photo</AddStudentButton>
           <label for="name">Name of Student</label>
           <InputField  id="name" 
               value={st_name}
@@ -90,7 +172,7 @@ const EditStudent = (props) => {
               <option value="discontinued">Discontinued</option>
               <option value="active">Active</option>
           </SelectField>
-          <AddStudentButton onClick={updateStudent} >Update Student</AddStudentButton>
+          <AddStudentButton onClick={updateStudent} >Save Records</AddStudentButton>
           </> 
       </Container>
   )
@@ -101,16 +183,18 @@ padding: 1rem 2rem;
 display: flex;
 flex-direction: column;
 margin: auto;
+margin-top: 50px;
+width: 400px;
 max-width: 600px;
 background-color: #fff;
 /* position: fixed;
 top: 50%;
 left: 50%;
-transform: translate(-50%, -50%); 
+transform: translate(-50%, -50%);  */
 z-index: 1000;
 border-radius: 5px;
 box-shadow:  10px 10px 15px #bebebe,
-           10px 10px 15px #bebebe; */
+           10px 10px 15px #bebebe;
 
 
 label {
@@ -178,7 +262,7 @@ background-position: center;
 background-size: cover;
 background-repeat: no-repeat;
 width: 100%;
-height: 400px;
+height: 300px;
 `;
 
 export default EditStudent

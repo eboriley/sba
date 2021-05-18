@@ -75,13 +75,13 @@ const Student = ({id, name, stClass, stPhoto, stDob}) => {
             </Control>
             <Control>
               <img src="../images/delete-ui-svgrepo-com.svg" alt="delete-logo"/>
-              <Link to={`/edit/${id}`} onClick={deleteStudent}>delete</Link>
+              <Link onClick={deleteStudent}>delete</Link>
             </Control>
           </ProfileControls>
           </SubCard>
         </Card>
       </ListGroup>
-      </>
+    </>
   )
 }
 
@@ -100,7 +100,7 @@ const NamesContainer = styled.div`
 display: flex;
 flex-direction: column;
 overflow-y: scroll;
-height: 540px;
+height: 600px;
 background-color: #F0F3F8;
 margin-bottom: .8rem;
 
